@@ -1,0 +1,32 @@
+name: Build LaTeX
+on: [push]
+jobs: 
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install LaTex
+        run: |
+          sudo apt update
+          sudo apt install texlive-latex-extra texlive-latex-recommended texlive-lang-cyrillic texlive-lang-german texlive-lang-spanish texlive-lang-italian
+      - name: Set up Git repository
+        uses: actions/checkout@v1
+      - name: Run buils script
+        run: ./build.sh      
+      - name: Set Tag and Release
+        run: echo "::set-env name=DATE::$(date +%Y-%m-%d)"  
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{env.DATE}}
+          release_name: Olympus DAO Manifesto ${{env.DATE}}
+          draft: false
+          prerelease: false
+      - name: Upload Assets
+        uses: axel1200/release-asset-action@v1
+        with:
+         pattern: "release/*.pdf"
+         github-token: ${{ secrets.GITHUB_TOKEN }}
+         release-url: ${{ steps.create_release.outputs.upload_url }}
